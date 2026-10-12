@@ -1,0 +1,38 @@
+name: fetch-book-tmp
+# ВРЕМЕННЫЙ технический workflow: доставляет PDF учебника из открытого
+# репозитория МФТИ в этот репозиторий, чтобы с ним можно было работать
+# в песочнице (в самой песочнице нет прямого доступа к new.mipt.ru).
+# Удаляется сразу после использования.
+on:
+  workflow_dispatch:
+    inputs:
+      target_path:
+        description: "Куда положить PDF"
+        required: false
+        default: "_tmp_book/dymarsky-ma1.pdf"
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+      - name: Download PDF
+        run: |
+          set -e
+          mkdir -p _tmp_book
+          curl -sSL --fail -o _tmp_book/dymarsky-ma1.pdf \
+            "https://new.mipt.ru/upload/mathematics/study/uchebniki/%D0%9B_%D0%9C%D0%90-1_%D0%94%D1%8B%D0%BC%D0%B0%D1%80%D1%81%D0%BA%D0%B8%D0%B9.pdf"
+          ls -l _tmp_book/
+          head -c 8 _tmp_book/dymarsky-ma1.pdf | xxd | head -1
+      - name: Commit
+        run: |
+          set -e
+          git config user.name "arena-relay"
+          git config user.email "arena-relay@users.noreply.github.com"
+          git add -f _tmp_book/dymarsky-ma1.pdf
+          git commit -m "tmp: relay book pdf [skip ci]" || echo "nothing to commit"
+          git push origin HEAD:${{ github.ref_name }}
