@@ -1,0 +1,6 @@
+# артефакты сборки лабы по флоатам
+build/
+build-fm/
+build-fma/
+__pycache__/
+*.o
